@@ -92,6 +92,9 @@ for entry in data['data']['featured']['entries']:
   layout['items'].append(item)
 
 
+if len(layouts) == 0:
+  exit()
+
 # Create Image
 COLUMNS = 8
 HEIGHT_PER_LAYOUT = 30
@@ -114,7 +117,7 @@ fontTileSubtitle = ImageFont.truetype('Burbank Big Condensed Black.otf', size = 
 whiteColor = ImageColor.getrgb("#FFFFFF")
 greyColor = ImageColor.getrgb("#AAAAAA")
 redColor = ImageColor.getrgb("#FF0000")
-image = Image.new('RGB', (COLUMNS * (TILE_SIZE + GAP) + GAP, height + GAP))
+image = Image.new('RGB', (COLUMNS * (TILE_SIZE + GAP) + GAP, height + GAP), color = ImageColor.getrgb("#0c1715"))
 draw = ImageDraw.Draw(image)
 y = GAP
 for key, value in layouts.items():
@@ -140,7 +143,6 @@ for key, value in layouts.items():
     if item['price'] != item['regularPrice']:
       draw.text((x + TILE_SIZE - 30, y + TILE_SIZE + 25), str(item['regularPrice']), fill = greyColor, font = fontTileSubtitle, anchor = 'ra')
       draw.line([(x + TILE_SIZE - 55, y + TILE_SIZE + 25 + 3), (x + TILE_SIZE - 30, y + TILE_SIZE + 25 + 6)], fill = redColor, width = 1, joint = None)
-
 
     x += TILE_SIZE + GAP
     i += 1
