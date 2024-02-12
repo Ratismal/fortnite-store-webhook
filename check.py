@@ -67,9 +67,14 @@ def process_entry(entry, layouts):
   }
   if materials != None:
     material = materials['materialInstances'][0]
+    url = ""
+    if "Background" in material['images']:
+      url = material['images']['Background']
+    elif "OfferImage" in material['images']:
+      url = material['images']['OfferImage']
     item['image'] = {
       'id': material['id'],
-      'url': material['images']['Background']
+      'url': url
     }
     checkImage(item['image'])
 
