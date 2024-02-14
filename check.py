@@ -140,7 +140,8 @@ redColor = ImageColor.getrgb("#FF0000")
 
 def create_image(title, layouts, bg_color, filename):
   if len(layouts) == 0:
-    exit()
+    print("Skipping {}".format(filename))
+    return()
 
   height = calculate_height(layouts)
 
@@ -180,6 +181,8 @@ def create_image(title, layouts, bg_color, filename):
     
     if i != 0:
       y += HEIGHT_PER_ROW
+
+  print("Generating {}".format(filename))
 
   image.save(filename, 'png')
 
