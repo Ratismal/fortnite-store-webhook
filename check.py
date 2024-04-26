@@ -87,16 +87,16 @@ def process_entry(entry, layouts):
     item['title'] = firstItem['name']
     item['subtitle'] = firstItem['type']['displayValue']
 
+  if 'layout' in entry and 'id' in entry['layout']:
+    layoutId = entry['layout']['id']
+    if not layoutId in layouts:
+      layouts[layoutId] = {
+        'name': entry['layout']['name'],
+        'items': []
+      }
 
-  layoutId = entry['layout']['id']
-  if not layoutId in layouts:
-    layouts[layoutId] = {
-      'name': entry['layout']['name'],
-      'items': []
-    }
-
-  layout = layouts[layoutId]
-  layout['items'].append(item)
+    layout = layouts[layoutId]
+    layout['items'].append(item)
 
 for entry in data['data']['featured']['entries']:
   entryIds.append(entry['offerId'])
