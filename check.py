@@ -87,7 +87,7 @@ def process_entry(entry, layouts):
     item['title'] = firstItem['name']
     item['subtitle'] = firstItem['type']['displayValue']
 
-  if 'layout' in entry and 'id' in entry['layout']:
+  if entry is not None and 'layout' in entry and 'id' in entry['layout']:
     layoutId = entry['layout']['id']
     if not layoutId in layouts:
       layouts[layoutId] = {
