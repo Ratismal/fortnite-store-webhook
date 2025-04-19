@@ -251,5 +251,5 @@ with open('data.json', 'w') as f:
   f.write(json.dumps(data, indent=2))
 # with open('output.json', 'w') as f:
 #   f.write(json.dumps(layouts, indent=2))
-# with open('cache.json', 'w') as f:
-#   f.write(json.dumps(entryIds, indent=2))
+with open('cache.json', 'w') as f:
+  f.write(json.dumps(entryIds, indent=2))
