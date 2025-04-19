@@ -26,7 +26,7 @@ try:
   with open('data.json') as f:
     oldData = json.load(f)
 except:
-  oldData = []
+  oldData = None
 
 def getImagePath(img):
   ext = pathlib.Path(img['url']).suffix
@@ -41,12 +41,14 @@ def checkImage(img):
     with open(p, 'wb') as f:
       f.write(img_data)
 
-endpoint = 'https://fortnite-api.com/v2/shop/br'
+endpoint = 'https://fortnite-api.com/v2/shop'
 
 response = requests.get(endpoint, headers = {
   'Authorization': config['apiKey']
 })
 data = response.json()
+
+# print(data)
 
 output = []
 
@@ -56,39 +58,75 @@ addedLayouts = {}
 removedLayouts = {}
 
 def process_entry(entry, layouts):
-  materials = entry['newDisplayAsset']
   item = {
     'regularPrice': entry['regularPrice'],
     'price': entry['finalPrice'],
     'title': '',
     'subtitle': '',
     'bundle': False,
-    'image': False
-  }
-  if materials != None:
-    material = materials['materialInstances'][0]
-    url = ""
-    if "Background" in material['images']:
-      url = material['images']['Background']
-    elif "OfferImage" in material['images']:
-      url = material['images']['OfferImage']
-    item['image'] = {
-      'id': material['id'],
-      'url': url
+    'image': False,
+    'colors': {
+      'color1': '004e66ff',
+      'color2': '000a2eff',
+      'color3': '00253dff',
+      'textBackgroundColor': '000a2eff'
     }
-    checkImage(item['image'])
+  }
 
-  if entry['bundle'] != None:
+  if 'newDisplayAsset' in entry:
+    materials = entry['newDisplayAsset']
+
+    if len(materials['materialInstances']) > 0:
+      material = materials['materialInstances'][0]
+      url = ""
+      if "Background" in material['images']:
+        url = material['images']['Background']
+      elif "OfferImage" in material['images']:
+        url = material['images']['OfferImage']
+      item['image'] = {
+        'id': material['id'],
+        'url': url
+      }
+      checkImage(item['image'])
+
+    if len(materials['renderImages']) > 0:
+      material = materials['renderImages'][0]
+      item['image'] = {
+        'id': material['fileName'],
+        'url': material['image']
+      }
+      checkImage(item['image'])
+
+  if 'bundle' in entry:
     item['bundle'] = True
     item['title'] = entry['bundle']['name']
     item['subtitle'] = entry['bundle']['info']
-  else:
-    firstItem = entry['items'][0]
-    item['title'] = firstItem['name']
-    item['subtitle'] = firstItem['type']['displayValue']
+  elif 'items' in entry:
+    if len(entry['items']) > 0:
+      firstItem = entry['items'][0]
+      item['title'] = firstItem['name']
+      item['subtitle'] = firstItem['type']['displayValue']
+  elif 'brItems' in entry:
+    if len(entry['brItems']) > 0:
+      firstItem = entry['brItems'][0]
+      item['title'] = firstItem['name']
+      item['subtitle'] = firstItem['type']['displayValue']
+  elif 'tracks' in entry:
+    if len(entry['tracks']) > 0:
+      firstItem = entry['tracks'][0]
+      item['title'] = firstItem['title']
+      item['subtitle'] = 'Jam Track'
+      item['image'] = {
+        'id': firstItem['devName'],
+        'url': firstItem['albumArt']
+      }
+      checkImage(item['image'])
 
-  entryLayout = entry['layout']
-  if entryLayout is not None:
+  if 'colors' in entry:
+    item['colors'] = entry['colors']
+
+  if 'layout' in entry:
+    entryLayout = entry['layout']
     layoutId = entryLayout['id']
     if not layoutId in layouts:
       layouts[layoutId] = {
@@ -99,7 +137,8 @@ def process_entry(entry, layouts):
     layout = layouts[layoutId]
     layout['items'].append(item)
 
-for entry in data['data']['featured']['entries']:
+for entry in data['data']['entries']:
+  # print(entry)
   entryIds.append(entry['offerId'])
 
   if entry['offerId'] in oldEntryIds:
@@ -107,11 +146,12 @@ for entry in data['data']['featured']['entries']:
 
   process_entry(entry, addedLayouts)
 
-for entry in oldData['data']['featured']['entries']:
-  if entry['offerId'] in entryIds:
-    continue
+if oldData is not None:
+  for entry in oldData['data']['entries']:
+    if entry['offerId'] in entryIds:
+      continue
 
-  process_entry(entry, removedLayouts)
+    process_entry(entry, removedLayouts)
 
 # Create Image
 COLUMNS = 8
@@ -158,11 +198,19 @@ def create_image(title, layouts, bg_color, filename):
 
     i = 0
     for item in value['items']:
+      iconPosition = (x, y, x + TILE_SIZE, y + TILE_SIZE)
+
+      draw.rectangle(
+        (iconPosition[0], iconPosition[1], iconPosition[2] - 1, iconPosition[3] - 1),
+        ImageColor.getrgb('#' + item['colors']['color1']))
+
       if item['image'] != False:
         imgPath = getImagePath(item['image'])
         with Image.open(imgPath) as img:
           resized = img.resize((TILE_SIZE, TILE_SIZE))
-          image.paste(resized, (x, y, x + TILE_SIZE, y + TILE_SIZE))
+          converted = resized.convert('RGBA')
+          alpha = converted.convert('LA')
+          image.paste(converted, iconPosition, mask=alpha)
 
       draw.text((x, y + TILE_SIZE + 5), item['title'], fill = whiteColor, font = fontTileTitle)
       draw.text((x, y + TILE_SIZE + 25), item['subtitle'], fill = whiteColor, font = fontTileSubtitle)
@@ -203,5 +251,5 @@ with open('data.json', 'w') as f:
   f.write(json.dumps(data, indent=2))
 # with open('output.json', 'w') as f:
 #   f.write(json.dumps(layouts, indent=2))
-with open('cache.json', 'w') as f:
-  f.write(json.dumps(entryIds, indent=2))
+# with open('cache.json', 'w') as f:
+#   f.write(json.dumps(entryIds, indent=2))
