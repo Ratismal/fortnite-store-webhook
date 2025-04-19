@@ -121,6 +121,11 @@ def process_entry(entry, layouts):
         'url': firstItem['albumArt']
       }
       checkImage(item['image'])
+  elif 'instruments' in entry:
+    if len(entry['instruments']) > 0:
+      firstItem = entry['instruments'][0]
+      item['title'] = firstItem['name']
+      item['subtitle'] = firstItem['type']['displayValue']
 
   if 'colors' in entry:
     item['colors'] = entry['colors']
